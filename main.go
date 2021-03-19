@@ -1,78 +1,68 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/PuerkitoBio/goquery"
 )
 
+/*
+TODO: Pull individual meetup resource link
+* verify that the document body contains the appropriate div resource
+* Find the right class
+* curate a list of upcoming meetups
+*/
 func main() {
 	client := &http.Client{
 		Timeout: time.Second * 5,
 	}
-	in := make(chan string, 10)
-	for i := 0; i < 5; i++ {
-		go request(client, in)
-	}
 
 	resp, err := get(client, "https://www.meetup.com/pro/forge-utah/")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
 	}
 	defer resp.Body.Close()
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	urls, err := GetMeetups(body)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	selection := doc.Find("a")
-	if len(selection.Nodes) == 0 {
-		panic("no 'a' nodes found")
-	}
-	for _, node := range selection.Nodes {
-		for _, attr := range node.Attr {
-			if attr.Key == "href" {
-				if strings.HasPrefix(attr.Val, "http") {
-					in <- attr.Val
-				}
-				break
-			}
-		}
-	}
-}
+	fmt.Println(urls)
 
-func request(client *http.Client, in chan string) {
-	for {
-		select {
-		case url := <-in:
-			err := getChild(client, url)
+}
+func GetMeetups(body []byte) ([]string, error) {
+	var urls []string
+
+	// split in to "script" elements
+	str2 := strings.SplitAfter(string(body), `</script>`)
+	for _, s := range str2 {
+		// search for url key
+		if strings.Contains(s, `"url"`) {
+			// clean up html
+			m := make(map[string]interface{})
+			meetupInfo := cleanHTMLReactScriptTag(s)
+			err := json.Unmarshal([]byte(meetupInfo), &m)
 			if err != nil {
-				fmt.Println(err)
-				continue
+				return []string{}, err
 			}
+			urls = append(urls, m["url"].(string))
 		}
 	}
+	return urls, nil
 }
 
-func getChild(client *http.Client, attr string) error {
-	childResp, err := get(client, attr)
-	if err != nil {
-		return err
-	}
-	b, err := ioutil.ReadAll(childResp.Body)
-	if err != nil {
-		return err
-	}
-	defer childResp.Body.Close()
-	if childResp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s is not status 200, status: %d", attr, childResp.StatusCode)
-	}
-	length := len(b)
-	fmt.Println("URL :", attr, "Status Code :", childResp.StatusCode, "length:", length)
-	return nil
+func cleanHTMLReactScriptTag(s string) string {
+	s = strings.TrimPrefix(s, `<script data-react-helmet="true" type="application/ld+json">`)
+	s = strings.TrimSuffix(s, `</script>`)
+	return s
 }
 
 func get(client *http.Client, url string) (*http.Response, error) {
@@ -90,7 +80,7 @@ func get(client *http.Client, url string) (*http.Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("not a 200 status code")
+		return nil, errors.New("not a 200 status code")
 	}
 	return resp, err
 }
