@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -40,6 +41,13 @@ func main() {
 		Timeout: time.Second * 5,
 	}
 
+	file, err := os.OpenFile("datums/meetups.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	encoder := json.NewEncoder(file)
+
 	resp, err := get(client, "https://www.meetup.com/pro/forge-utah/")
 	if err != nil {
 		log.Fatal(err)
@@ -61,8 +69,9 @@ func main() {
 		}
 		infos = append(infos, info)
 	}
-	fmt.Println("done")
 	fmt.Println(len(infos))
+	encoder.Encode(&infos)
+	fmt.Println("done")
 }
 
 func GetMeetupInfo(client *http.Client, count int, url string) (MeetupInfo, error) {
@@ -98,7 +107,6 @@ func GetMeetupInfo(client *http.Client, count int, url string) (MeetupInfo, erro
 // GetMeetupURLs pulls a list of upcoming Forge Foundation
 func GetMeetupsURLs(body []byte) ([]string, error) {
 	var urls []string
-
 	// split in to "script" elements
 	str2 := strings.SplitAfter(string(body), `</script>`)
 	for _, s := range str2 {
