@@ -11,12 +11,30 @@ import (
 	"time"
 )
 
+type MeetupInfo struct {
+	Name                string `json:"name"`
+	URL                 string `json:"url"`
+	Description         string `json:"description"`
+	Startdate           string `json:"startDate"`
+	Enddate             string `json:"endDate"`
+	Eventstatus         string `json:"eventStatus"`
+	Eventattendancemode string `json:"eventAttendanceMode"`
+	Location            struct {
+		Type string `json:"@type"`
+		URL  string `json:"url"`
+	} `json:"location"`
+}
+
 /*
-TODO: Pull individual meetup resource link
-* verify that the document body contains the appropriate div resource
-* Find the right class
-* curate a list of upcoming meetups
+TODO:
+- pull meetup information
+	- Title, description, date, location (online/in-person)
+- store information - as json file??
+- add github actions for testing
+- clean up code and pull out into directory
+- deploy script to run weekly
 */
+
 func main() {
 	client := &http.Client{
 		Timeout: time.Second * 5,
@@ -31,14 +49,54 @@ func main() {
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
-	urls, err := GetMeetups(body)
+	urls, err := GetMeetupsURLs(body)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(urls)
-
+	var infos []MeetupInfo
+	for i, url := range urls {
+		info, err := GetMeetupInfo(client, i, url)
+		if err != nil {
+			log.Fatal(err)
+		}
+		infos = append(infos, info)
+	}
+	fmt.Println("done")
+	fmt.Println(len(infos))
 }
-func GetMeetups(body []byte) ([]string, error) {
+
+func GetMeetupInfo(client *http.Client, count int, url string) (MeetupInfo, error) {
+	resp, err := get(client, url)
+	if err != nil {
+		return MeetupInfo{}, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return MeetupInfo{}, err
+	}
+	defer resp.Body.Close()
+	var parsedMeetup MeetupInfo
+	str2 := strings.SplitAfter(string(body), `</script>`)
+	for _, s := range str2 {
+		// hope this works?
+		if strings.Contains(s, `"url"`) {
+			infos := cleanHTMLReactScriptTag(s)
+			err = json.Unmarshal([]byte(infos), &parsedMeetup)
+			if err != nil {
+				continue
+			}
+			if url == parsedMeetup.URL {
+				break
+			}
+			fmt.Println(parsedMeetup.URL)
+			continue
+		}
+	}
+	return parsedMeetup, nil
+}
+
+// GetMeetupURLs pulls a list of upcoming Forge Foundation
+func GetMeetupsURLs(body []byte) ([]string, error) {
 	var urls []string
 
 	// split in to "script" elements
