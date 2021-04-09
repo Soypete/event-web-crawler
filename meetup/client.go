@@ -10,11 +10,10 @@ import (
 	"time"
 )
 
-const proURL = "https://www.meetup.com/pro/forge-utah/"
-
 // Client is meetup wrapper for http.Client
 type Client struct {
 	client *http.Client
+	proURL string
 }
 
 // Setup the meetup http client
@@ -23,29 +22,29 @@ func Setup() *Client {
 		client: &http.Client{
 			Timeout: time.Second * 5,
 		},
+		proURL: "https://www.meetup.com/pro/forge-utah/",
 	}
 	return &c
 }
 
 // GetProPage retrieves the HTML payload from meetups ForgeFoundation pro page
 func (c *Client) GetProPage() ([]byte, error) {
-	resp, err := c.get(proURL)
+	// check http.Client initialized
+	if c.client == nil {
+		return []byte{}, errors.New("http.Client not initialized")
+	}
+	resp, err := c.GetWebPage(c.proURL)
 	if err != nil {
+		fmt.Println(resp)
 		return []byte{}, err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []byte{}, err
-	}
-	defer resp.Body.Close()
-	return body, nil
+	return c.GetWebPage(c.proURL)
 }
 
-// TODO: this code is not mine. should I change any of this logic?
-func (c *Client) get(url string) (*http.Response, error) {
+func (c *Client) GetWebPage(url string) ([]byte, error) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Cannot create request %w", err)
 	}
 	request.AddCookie(&http.Cookie{
 		Name:  "name",
@@ -54,24 +53,24 @@ func (c *Client) get(url string) (*http.Response, error) {
 	request.Header.Set("Content-Type", "application/json")
 	resp, err := c.client.Do(request)
 	if err != nil {
-		return nil, err
+		return []byte{}, fmt.Errorf("failure in Do request:\n %w ---\n", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("not a 200 status code")
-	}
-	return resp, err
-}
-
-func (c *Client) GetMeetupInfo(url string) (Info, error) {
-	resp, err := c.get(url)
-	if err != nil {
-		return Info{}, err
+		return []byte{}, errors.New("not a 200 status code")
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return Info{}, err
+		return []byte{}, fmt.Errorf("Cannot parse response body: %w", err)
 	}
 	defer resp.Body.Close()
+	return body, nil
+}
+
+func (c *Client) GetMeetupInfo(url string) (Info, error) {
+	body, err := c.GetWebPage(url)
+	if err != nil {
+		return Info{}, err
+	}
 	// TODO: this is mostly duplicates on GetMeetupURL
 	var parsedMeetup Info
 	str2 := strings.SplitAfter(string(body), `</script>`)

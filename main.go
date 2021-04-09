@@ -11,7 +11,8 @@ import (
 
 /*
 TODO:
-- clean up code and pull out into directory
+- adding tests
+- clean up code and add better errors
 - add github actions for testing
 - deploy script to run weekly
 */
