@@ -20,7 +20,7 @@ func setupTestServer() (Client, *httptest.Server) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		i, err := w.Write(jsonBlob)
+		w.Write(jsonBlob)
 	}))
 	testClient := Client{
 		client: &http.Client{Timeout: time.Second * 5},
@@ -113,7 +113,7 @@ func TestClient_GetProPage(t *testing.T) {
 		{
 			name:    "bad json",
 			c:       &client2,
-			want:    []byte{},
+			want:    []byte("{}"),
 			wantErr: false,
 		},
 	}
