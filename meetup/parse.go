@@ -7,17 +7,19 @@ import (
 
 // Info contains relevant meetup information that is to be stored.
 type Info struct {
-	Name                string `json:"name"`
-	URL                 string `json:"url"`
-	Description         string `json:"description"`
-	Startdate           string `json:"startDate"`
-	Enddate             string `json:"endDate"`
-	Eventstatus         string `json:"eventStatus"`
-	Eventattendancemode string `json:"eventAttendanceMode"`
-	Location            struct {
-		Type string `json:"@type"`
-		URL  string `json:"url"`
-	} `json:"location"`
+	Name                string   `json:"name"`
+	URL                 string   `json:"url"`
+	Description         string   `json:"description"`
+	Startdate           string   `json:"startDate"`
+	Enddate             string   `json:"endDate"`
+	Eventstatus         string   `json:"eventStatus"`
+	Eventattendancemode string   `json:"eventAttendanceMode"`
+	Location            Location `json:"location"`
+}
+
+type Location struct {
+	Type string `json:"@type"`
+	URL  string `json:"url"`
 }
 
 func cleanHTMLReactScriptTag(s string) string {

@@ -33,15 +33,14 @@ func (c *Client) GetProPage() ([]byte, error) {
 	if c.client == nil {
 		return []byte{}, errors.New("http.Client not initialized")
 	}
-	resp, err := c.GetWebPage(c.proURL)
-	if err != nil {
-		fmt.Println(resp)
-		return []byte{}, err
-	}
 	return c.GetWebPage(c.proURL)
 }
 
 func (c *Client) GetWebPage(url string) ([]byte, error) {
+	// check http.Client initialized
+	if c.client == nil {
+		return []byte{}, errors.New("http.Client not initialized")
+	}
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot create request %w", err)
