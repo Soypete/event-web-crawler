@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 
@@ -11,7 +10,6 @@ import (
 
 /*
 TODO:
-- adding tests
 - clean up code and add better errors
 - add github actions for testing
 - deploy script to run weekly
@@ -44,7 +42,5 @@ func main() {
 		}
 		infos = append(infos, info)
 	}
-	fmt.Println(len(infos))
 	encoder.Encode(&infos)
-	fmt.Println("done")
 }
