@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 
@@ -11,15 +10,13 @@ import (
 
 /*
 TODO:
-- adding tests
-- clean up code and add better errors
-- add github actions for testing
 - deploy script to run weekly
 */
 
 func main() {
 	meetupClt := meetup.Setup()
 	file, err := os.OpenFile("datums/meetups.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// HTMLfile, err := os.OpenFile("datums/meetup.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,6 +27,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// HTMLfile.WriteString(string(body))
 	urls, err := meetup.GetMeetupsURLs(body)
 	if err != nil {
 		log.Fatal(err)
@@ -42,7 +40,5 @@ func main() {
 		}
 		infos = append(infos, info)
 	}
-	fmt.Println(len(infos))
 	encoder.Encode(&infos)
-	fmt.Println("done")
 }

@@ -10,17 +10,16 @@ import (
 	"time"
 )
 
-var jsonBlob []byte
+var htmlBlob []byte
 
 func setupTestServer() (Client, *httptest.Server) {
-	jsonFile, _ := os.Open("dataums/meetups.json")
-	jsonBlob, _ = ioutil.ReadAll(jsonFile)
-
-	defer jsonFile.Close()
+	htmlFile, _ := os.Open("../datums/meetup.txt")
+	htmlBlob, _ = ioutil.ReadAll(htmlFile)
+	defer htmlFile.Close()
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(jsonBlob)
+		w.Write(htmlBlob)
 	}))
 	testClient := Client{
 		client: &http.Client{Timeout: time.Second * 5},
@@ -63,7 +62,7 @@ func TestClient_GetWebPage(t *testing.T) {
 			name:    "success run",
 			c:       &testClient,
 			url:     testClient.proURL,
-			want:    jsonBlob,
+			want:    htmlBlob,
 			wantErr: false,
 		},
 	}
@@ -101,7 +100,7 @@ func TestClient_GetProPage(t *testing.T) {
 		{
 			name:    "success",
 			c:       &testClient,
-			want:    jsonBlob,
+			want:    htmlBlob,
 			wantErr: false,
 		},
 		{
@@ -132,21 +131,58 @@ func TestClient_GetProPage(t *testing.T) {
 }
 
 func TestClient_GetMeetupInfo(t *testing.T) {
-	type args struct {
-		url string
+	testClient, _ := setupTestServer()
+	ts2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("{}"))
+	}))
+	defer ts2.Close()
+	client2 := Client{
+		client: &http.Client{Timeout: time.Second * 5},
+		proURL: ts2.URL,
 	}
 	tests := []struct {
 		name    string
 		c       *Client
-		args    args
+		url     string
 		want    Info
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "success run",
+			c:    &testClient,
+			url:  testClient.proURL,
+			want: Info{
+				Name:                "TBA - looking for speaker",
+				URL:                 "https://www.meetup.com/utahgophers/events/rtcxdsycchbgb/",
+				Description:         "",
+				Startdate:           "2021-05-04T18:30-06:00",
+				Enddate:             "2021-05-04T20:00-06:00",
+				Eventstatus:         "https://schema.org/EventScheduled",
+				Eventattendancemode: "https://schema.org/OfflineEventAttendanceMode",
+				Location: Location{
+					Type: "Place",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "no client",
+			c:       &Client{},
+			url:     "",
+			want:    Info{},
+			wantErr: true,
+		},
+		{
+			name:    "bad json",
+			c:       &client2,
+			url:     client2.proURL,
+			want:    Info{},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.c.GetMeetupInfo(tt.args.url)
+			got, err := tt.c.GetMeetupInfo(tt.url)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.GetMeetupInfo() error = %v, wantErr %v", err, tt.wantErr)
 				return

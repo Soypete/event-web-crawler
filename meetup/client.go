@@ -33,15 +33,14 @@ func (c *Client) GetProPage() ([]byte, error) {
 	if c.client == nil {
 		return []byte{}, errors.New("http.Client not initialized")
 	}
-	resp, err := c.GetWebPage(c.proURL)
-	if err != nil {
-		fmt.Println(resp)
-		return []byte{}, err
-	}
 	return c.GetWebPage(c.proURL)
 }
 
 func (c *Client) GetWebPage(url string) ([]byte, error) {
+	// check http.Client initialized
+	if c.client == nil {
+		return []byte{}, errors.New("http.Client not initialized")
+	}
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot create request %w", err)
@@ -69,9 +68,8 @@ func (c *Client) GetWebPage(url string) ([]byte, error) {
 func (c *Client) GetMeetupInfo(url string) (Info, error) {
 	body, err := c.GetWebPage(url)
 	if err != nil {
-		return Info{}, err
+		return Info{}, fmt.Errorf("cannot get meetup Info: %w", err)
 	}
-	// TODO: this is mostly duplicates on GetMeetupURL
 	var parsedMeetup Info
 	str2 := strings.SplitAfter(string(body), `</script>`)
 	for _, s := range str2 {
