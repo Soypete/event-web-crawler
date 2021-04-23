@@ -2,6 +2,7 @@ package meetup
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -41,7 +42,7 @@ func GetMeetupsURLs(body []byte) ([]string, error) {
 			meetupInfo := cleanHTMLReactScriptTag(s)
 			err := json.Unmarshal([]byte(meetupInfo), &m)
 			if err != nil {
-				return []string{}, err
+				return []string{}, fmt.Errorf("Cannot unmarshal meetup urls %w", err)
 			}
 			urls = append(urls, m["url"].(string))
 		}

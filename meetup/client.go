@@ -68,9 +68,8 @@ func (c *Client) GetWebPage(url string) ([]byte, error) {
 func (c *Client) GetMeetupInfo(url string) (Info, error) {
 	body, err := c.GetWebPage(url)
 	if err != nil {
-		return Info{}, err
+		return Info{}, fmt.Errorf("cannot get meetup Info: %w", err)
 	}
-	// TODO: this is mostly duplicates on GetMeetupURL
 	var parsedMeetup Info
 	str2 := strings.SplitAfter(string(body), `</script>`)
 	for _, s := range str2 {
