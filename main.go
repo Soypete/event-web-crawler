@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"log"
-	"os"
 
+	"github.com/Soypete/event-web-crawler/firebase"
 	"github.com/Soypete/event-web-crawler/meetup"
 )
 
@@ -14,20 +14,16 @@ TODO:
 */
 
 func main() {
-	meetupClt := meetup.Setup()
-	file, err := os.OpenFile("datums/meetups.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	// HTMLfile, err := os.OpenFile("datums/meetup.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	ctx := context.Background()
+	firebaseClt, err := firebase.Setup(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer file.Close()
-	encoder := json.NewEncoder(file)
-
+	meetupClt := meetup.Setup()
 	body, err := meetupClt.GetProPage()
 	if err != nil {
 		log.Fatal(err)
 	}
-	// HTMLfile.WriteString(string(body))
 	urls, err := meetup.GetMeetupsURLs(body)
 	if err != nil {
 		log.Fatal(err)
@@ -40,5 +36,10 @@ func main() {
 		}
 		infos = append(infos, info)
 	}
-	encoder.Encode(&infos)
+	// take infos and store firebase
+	err = firebaseClt.AddMeetupInfos(ctx, "Meetups", infos)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// push to site via github api
 }
