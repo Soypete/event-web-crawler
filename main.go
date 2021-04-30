@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/Soypete/event-web-crawler/firebase"
@@ -37,12 +36,8 @@ func main() {
 		}
 		infos = append(infos, info)
 	}
-	data, err := json.Marshal(infos)
-	if err != nil {
-		log.Fatal(err)
-	}
 	// take infos and store firebase
-	err = firebaseClt.AddToCollection(ctx, "Meetups", data)
+	err = firebaseClt.AddMeetupInfos(ctx, "Meetups", infos)
 	if err != nil {
 		log.Fatal(err)
 	}
