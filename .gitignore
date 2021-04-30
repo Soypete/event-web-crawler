@@ -18,3 +18,4 @@ main
 event-web-crawler
 datums/
 .vscode/
+firebase-debug.log
