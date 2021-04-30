@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"os"
 
+	"github.com/Soypete/event-web-crawler/firebase"
 	"github.com/Soypete/event-web-crawler/meetup"
 )
 
@@ -14,6 +16,8 @@ TODO:
 */
 
 func main() {
+	ctx := context.Background()
+	firebaseClt := firebase.Setup(ctx)
 	meetupClt := meetup.Setup()
 	file, err := os.OpenFile("datums/meetups.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	// HTMLfile, err := os.OpenFile("datums/meetup.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
