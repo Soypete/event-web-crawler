@@ -16,6 +16,7 @@ TODO:
 func main() {
 	meetupClt := meetup.Setup()
 	file, err := os.OpenFile("datums/meetups.json", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
 	// HTMLfile, err := os.OpenFile("datums/meetup.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
@@ -27,7 +28,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	// HTMLfile.WriteString(string(body))
+
 	urls, err := meetup.GetMeetupsURLs(body)
 	if err != nil {
 		log.Fatal(err)
