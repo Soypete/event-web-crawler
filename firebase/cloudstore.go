@@ -7,14 +7,13 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
-	firego "firebase.google.com/go"
 	"github.com/Soypete/event-web-crawler/meetup"
 )
 
 // Client stores firestore configured object that are needed
 // to save data to firestore.
 type Client struct {
-	App    *firego.App
+	App    *firebase.App
 	Client *firestore.Client
 }
 
@@ -24,7 +23,7 @@ const projectID = "meetup-crawler-store"
 // a firestore client.
 func Setup(ctx context.Context) (*Client, error) {
 	conf := &firebase.Config{ProjectID: projectID}
-	app, err := firebase.NewApp(ctx, nil, sa)
+	app, err := firebase.NewApp(ctx, conf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot configure firestore app: %w", err)
 	}
