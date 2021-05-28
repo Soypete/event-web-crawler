@@ -43,11 +43,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Saved meetups in firestore\n")
 }
 
 func main() {
 	log.Print("starting server...")
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/crawl", handler)
 
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")
