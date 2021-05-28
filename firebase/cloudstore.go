@@ -22,7 +22,7 @@ type Client struct {
 // Setup retrieves the necessary project information to set up
 // a firestore client.
 func Setup(ctx context.Context) (*Client, error) {
-	sa := option.WithCredentialsFile(".permissions/meetup-crawler-store-b25be2c787ec.json")
+	sa := option.WithCredentialsFile("permissions/meetup-crawler-store-b25be2c787ec.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		return nil, fmt.Errorf("cannot configure firestore app: %w", err)
