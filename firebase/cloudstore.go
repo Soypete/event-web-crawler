@@ -17,13 +17,10 @@ type Client struct {
 	Client *firestore.Client
 }
 
-const projectID = "meetup-crawler-store"
-
 // Setup retrieves the necessary project information to set up
 // a firestore client.
 func Setup(ctx context.Context) (*Client, error) {
-	conf := &firebase.Config{ProjectID: projectID}
-	app, err := firebase.NewApp(ctx, conf)
+	app, err := firebase.NewApp(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("cannot configure firestore app: %w", err)
 	}
