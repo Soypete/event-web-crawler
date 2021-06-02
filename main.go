@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
+	"os"
 
 	"github.com/Soypete/event-web-crawler/firebase"
 	"github.com/Soypete/event-web-crawler/meetup"
@@ -11,9 +13,9 @@ import (
 /*
 TODO:
 - deploy script to run weekly
+- update site with githib api
 */
-
-func main() {
+func handler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	firebaseClt, err := firebase.Setup(ctx)
 	if err != nil {
@@ -41,5 +43,23 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// push to site via github api
+	log.Printf("Saved meetups in firestore\n")
+}
+
+func main() {
+	log.Print("starting server...")
+	http.HandleFunc("/crawl", handler)
+
+	// Determine port for HTTP service.
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Printf("defaulting to port %s", port)
+	}
+
+	// Start HTTP server.
+	log.Printf("listening on port %s", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatal(err)
+	}
 }
