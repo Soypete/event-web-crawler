@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,51 +16,57 @@ TODO:
 - deploy script to run weekly
 - update site with githib api
 */
-func handler(w http.ResponseWriter, r *http.Request) {
+func runCrawler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	firebaseClt, err := firebase.Setup(ctx)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(w, err)
+		return
 	}
 	meetupClt := meetup.Setup()
 	body, err := meetupClt.GetProPage()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(w, err)
+		return
 	}
 	urls, err := meetup.GetMeetupsURLs(body)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(w, err)
+		return
 	}
 	var infos []meetup.Info
 	for _, url := range urls {
 		info, err := meetupClt.GetMeetupInfo(url)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Fprintln(w, err)
+			return
 		}
 		infos = append(infos, info)
 	}
+	fmt.Fprintf(w, "%d meetups found\n", len(infos))
 	// take infos and store firebase
 	err = firebaseClt.AddMeetupInfos(ctx, "Meetups", infos)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(w, err)
+		return
 	}
-	log.Printf("Saved meetups in firestore\n")
+	fmt.Fprintf(w, "Saved meetups in firestore\n")
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
-	w.Write(" we are live")
+	w.Write([]byte("we are live"))
 }
 
 func main() {
 	log.Print("starting server...")
-	http.HandleFunc("/crawl", handler)
+	http.HandleFunc("/crawl", runCrawler)
 	http.HandleFunc("/health", healthCheck)
 
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
-		log.Printf("defaulting to port %s", port)
+		log.Fatal("defaulting to port %s", port)
 	}
 
 	// Start HTTP server.
