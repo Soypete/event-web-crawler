@@ -46,9 +46,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Saved meetups in firestore\n")
 }
 
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	w.Write(" we are live")
+}
+
 func main() {
 	log.Print("starting server...")
 	http.HandleFunc("/crawl", handler)
+	http.HandleFunc("/health", healthCheck)
 
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")
