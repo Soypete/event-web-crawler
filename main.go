@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -54,6 +55,11 @@ func runCrawler(w http.ResponseWriter, r *http.Request) {
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
+	c, _ := ioutil.ReadDir("./")
+	fmt.Fprintln(w, "Listing subdir/parent")
+	for _, entry := range c {
+		fmt.Fprintln(w, " ", entry.Name(), entry.IsDir())
+	}
 	w.Write([]byte("we are live"))
 }
 
@@ -66,7 +72,7 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
-		log.Fatal("defaulting to port %s", port)
+		log.Printf("defaulting to port %s", port)
 	}
 
 	// Start HTTP server.

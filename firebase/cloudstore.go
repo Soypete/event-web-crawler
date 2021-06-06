@@ -20,31 +20,38 @@ type Client struct {
 
 const projectID = "meetup-crawler-store"
 
+var credsPath = "creds.json"
+
+// func init() {
+// credsPath = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+// }
+
 // Setup retrieves the necessary project information to set up
 // a firestore client.
 func Setup(ctx context.Context) (*Client, error) {
 	conf := &firebase.Config{ProjectID: projectID}
-	app, err := firebase.NewApp(ctx, conf)
-	if err != nil {
-		return nil, fmt.Errorf("cannot configure firestore app: %w", err)
-	}
+	// app, err := firebase.NewApp(ctx, conf)
+	// if err != nil {
+	// return nil, fmt.Errorf("cannot configure firestore app: %w", err)
+	// }
 
+	// client, err := app.Firestore(ctx)
+	// if err != nil {
+	// return nil, fmt.Errorf("cannot configure firestore client: %w", err)
+	// }
+	// coll := client.Collections(ctx)
+	// if coll == nil {
+	opt := option.WithCredentialsFile(credsPath)
+	app, err := firebase.NewApp(ctx, conf, opt)
+	if err != nil {
+		return nil, fmt.Errorf("error initializing app: %v", err)
+	}
 	client, err := app.Firestore(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("cannot configure firestore client: %w", err)
 	}
-	_, err := client.Collections()
-	if err != nil {
-		opt := option.WithCredentialsFile("permissions/meetup-crawler-store-b25be2c787ec.json")
-		app, err = firebase.NewApp(ctx, nil, opt)
-		if err != nil {
-			return nil, fmt.Errorf("error initializing app: %v", err)
-		}
-		client, err = app.Firestore(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("cannot configure firestore client: %w", err)
-		}
-	}
+	// }
 	c := &Client{
 		App:    app,
 		Client: client,

@@ -20,7 +20,7 @@ type Client struct {
 func Setup() *Client {
 	c := Client{
 		client: &http.Client{
-			Timeout: time.Second * 5,
+			Timeout: time.Second * 300,
 		},
 		proURL: "https://www.meetup.com/pro/forge-utah/",
 	}
