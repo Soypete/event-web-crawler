@@ -17,6 +17,11 @@
 main
 event-web-crawler
 .vscode/
+firebase.json
 firebase-debug.log
-.permissions/
-permissions/
+firebase.indexes.json
+firestore.rules
+firestore.indexes.json
+.firebaserc
+firestore-debug.log
+permissions/meetup-crawler-store-b25be2c787ec.json

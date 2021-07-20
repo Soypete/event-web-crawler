@@ -11,3 +11,8 @@ vendor/
 
 # Exclude git history and configuration.
 .gitignore
+datums/
+.profile
+.github/
+.permissions/
+
